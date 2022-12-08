@@ -9,6 +9,16 @@ const emailQueue = new Queue('emailQueue', {
     port: REDIS_PORT, host: REDIS_URI
   }
 })
+const emailQueue2 = new Queue('emailQueue2', {
+  redis: {
+    port: REDIS_PORT, host: REDIS_URI
+  }
+})
+const emailQueue3 = new Queue('emailQueue3', {
+  redis: {
+    port: REDIS_PORT, host: REDIS_URI
+  }
+})
 
 exports.create = async (req, res) => {
   const { name, email } = req.body;
@@ -31,14 +41,47 @@ exports.create = async (req, res) => {
 exports.sendEmailToUsers = async (req, res) => {
   try{
     const users = await User.find();
-    users.forEach((user,index) => {
-      emailQueue.add({ user }).then(() => {
-        if (index + 1 == users.length) {
-          res.json({
-            meessage: "All users are added to the queue"
+
+    users.forEach((user, index = 0) => {
+      if (index % 3 == 0) {
+        emailQueue.add({ user }, { attempts: 3 }).then(() => {
+          if (index + 1 == users.length) {
+            index = 0;
+            res.json({
+              meessage: "All users are added to the queue"
+            })
+          }
+        })
+      } else
+        if (index % 3 == 1) {
+          emailQueue2.add({ user }, { attempts: 3 }).then(() => {
+            if (index + 1 == users.length) {
+              index = 0;
+              res.json({
+                meessage: "All users are added to the queue"
+              })
+            }
           })
         }
-      })
+        else
+          if (index % 3 == 2) {
+            emailQueue3.add({ user }, { attempts: 3 }).then(() => {
+              if (index + 1 == users.length) {
+                index = 0;
+                res.json({
+                  meessage: "All users are added to the queue"
+                })
+              }
+            })
+          }
+      // emailQueue.add({ user }, { attempts: 3 }).then(() => {
+      //   if (index + 1 == users.length) {
+      //     index = 0;
+      //     res.json({
+      //       meessage: "All users are added to the queue"
+      //     })
+      //   }
+      // })
     })
   } catch (error) {
     console.log(error);
